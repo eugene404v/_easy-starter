@@ -27,7 +27,7 @@ gulp.task('html', function(callback) {
 });
 
 gulp.task('sass', function (callback) {
-    return gulp.src('./src/scss/main.scss')
+    return gulp.src('./src/scss/*.scss')
         .pipe(sourcemaps.init())
         .pipe(plumber({
             errorHandler: notify.onError(function(err){
