@@ -1,0 +1,29 @@
+body {
+    color: $font-color;
+}
+
+a {
+    text-decoration: none;
+    text-transform: uppercase;
+    display: block;
+    box-sizing: border-box;
+    color: $font-color;
+
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+ul, ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    margin: 0;
+    padding: 0;
+}
+
+
+
