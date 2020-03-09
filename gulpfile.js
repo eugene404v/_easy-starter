@@ -1,14 +1,24 @@
-"use strict";
+//"use strict";
 
 const gulp = require('gulp');
 const browserSync = require('browser-sync').create();
 const watch = require('gulp-watch');
 const sass = require('gulp-sass');
 const autoprefixer = require('gulp-autoprefixer');
+const csso = require('gulp-csso');
 const sourcemaps = require('gulp-sourcemaps');
 const notify = require('gulp-notify');
 const plumber = require('gulp-plumber');
 const fileinclude = require('gulp-file-include');
+
+
+const webpack = require("webpack-stream");
+
+
+const dist = "./dist/";
+
+
+
 
 gulp.task('html', function(callback) {
     return gulp.src('./src/html/*.html')
@@ -47,17 +57,58 @@ gulp.task('sass', function (callback) {
     callback();
 });
 
-gulp.task('copy:img', function(callback) {
-    return gulp.src('./src/img/**/*.*')
-      .pipe(gulp.dest('./build/img/'))
-      callback();
+//gulp.task('copy:img', function(callback) {
+ //   return gulp.src('./src/img/**/*.*')
+  //    .pipe(gulp.dest('./build/img/'))
+   //   callback();
+//});
+
+//gulp.task('copy:js', function(callback) {
+   // return gulp.src('./src/js/**/*.*')
+   //   .pipe(gulp.dest('./build/js/'))
+   //   callback();
+//});
+
+gulp.task("build-js", () => {
+    return gulp.src("./src/js/main.js")
+                .pipe(webpack({
+                    mode: 'development',
+                    output: {
+                        filename: 'script.js'
+                    },
+                    watch: false,
+                    devtool: "source-map",
+                    module: {
+                        rules: [
+                          {
+                            test: /\.m?js$/,
+                            exclude: /(node_modules|bower_components)/,
+                            use: {
+                              loader: 'babel-loader',
+                              options: {
+                                presets: [['@babel/preset-env', {
+                                    debug: true,
+                                    corejs: 3,
+                                    useBuiltIns: "usage"
+                                }]]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                }))
+                .pipe(gulp.dest(dist))
+                .on("end", browserSync.reload);
 });
 
-gulp.task('copy:js', function(callback) {
-    return gulp.src('./src/js/**/*.*')
-      .pipe(gulp.dest('./build/js/'))
-      callback();
+gulp.task("copy-assets", () => {
+    return gulp.src("./src/assets/**/*.*")
+                .pipe(gulp.dest(dist + "/assets"))
+                .on("end", browserSync.reload);
 });
+
+
+
 
 gulp.task('watch', function () {
     watch(['./build/*.html', './build/css/**/*.css'], gulp.parallel(browserSync.reload));
@@ -65,6 +116,7 @@ gulp.task('watch', function () {
         setTimeout(gulp.parallel('sass'), 1000);
     });
     watch('./src/html/**/*.html', gulp.parallel('html'));
+    watch("./src/js/**/*.js", gulp.parallel("build-js"));
 });
 
 gulp.task('server', function () {
@@ -76,6 +128,6 @@ gulp.task('server', function () {
 });
 
 gulp.task('default', gulp.series(
-    gulp.parallel('sass', 'html', 'copy:img', 'copy:js'),
+    gulp.parallel('sass', 'html', "build-js", "copy-assets"),
     gulp.parallel('server', 'watch')
 ));
