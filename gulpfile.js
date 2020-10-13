@@ -16,15 +16,15 @@ const pug = require('gulp-pug');
 const webpack = require("webpack-stream");
 
 
-const dist = "./dist/";
+const dist = "./docs/";
 
 
 
 
-gulp.task('html', function (callback) {
-    return gulp.src('./src/html/*.html')
+gulp.task('html', function(callback) {
+    return gulp.src('./src/*.html')
         .pipe(plumber({
-            errorHandler: notify.onError(function (err) {
+            errorHandler: notify.onError(function(err) {
                 return {
                     title: 'HTML include',
                     sound: false,
@@ -35,21 +35,21 @@ gulp.task('html', function (callback) {
         .pipe(fileinclude({
             prefix: '@@'
         }))
-        .pipe(gulp.dest('./dist/'))
+        .pipe(gulp.dest(dist))
     callback();
 });
 
-gulp.task('pug', function () {
+gulp.task('pug', function() {
     gulp.src('src/pug/*.pug')
-        .pipe(pug({pretty: '\t'}))
-        .pipe(gulp.dest('dist/'))
+        .pipe(pug({ pretty: '\t' }))
+        .pipe(gulp.dest(dist))
 });
 
-gulp.task('sass', function (callback) {
+gulp.task('sass', function(callback) {
     return gulp.src('./src/scss/*.scss')
         .pipe(sourcemaps.init())
         .pipe(plumber({
-            errorHandler: notify.onError(function (err) {
+            errorHandler: notify.onError(function(err) {
                 return {
                     title: 'SCSS compilation',
                     sound: false,
@@ -67,7 +67,7 @@ gulp.task('sass', function (callback) {
             sourceMap: true,
             debug: true
         }))
-        .pipe(gulp.dest('./dist/css/'))
+        .pipe(gulp.dest(`${dist}css`))
     callback();
 });
 
@@ -84,11 +84,11 @@ gulp.task('sass', function (callback) {
 //});
 
 gulp.task("build-js", () => {
-    return gulp.src("./src/js/main.js")
+    return gulp.src("./src/js/common.js")
         .pipe(webpack({
             mode: 'development',
             output: {
-                filename: 'script.js'
+                filename: 'common.js'
             },
             watch: false,
             devtool: "source-map",
@@ -121,33 +121,33 @@ gulp.task("copy-assets", () => {
         .on("end", browserSync.reload);
 });
 
-gulp.task('webp', () =>
+/*gulp.task('webp', () =>
     gulp.src('src/assets/img/*.*')
     .pipe(webp())
     .pipe(gulp.dest('dist'))
-);
+);*/
 
 gulp.task('compress', function(done) {
     gulp.src('src/assets/img/*.*')
-    .pipe(imagemin([
-        imagemin.gifsicle({interlaced: true}),
-        imagemin.mozjpeg({quality: 75, progressive: true}),
-        imagemin.optipng({optimizationLevel: 5}),
-        imagemin.svgo({
-            plugins: [
-                {removeViewBox: true},
-                {cleanupIDs: false}
-            ]
-        })
-    ]))
-    .pipe(gulp.dest('dist'))
-  done();
-  });
+        .pipe(imagemin([
+            imagemin.gifsicle({ interlaced: true }),
+            imagemin.mozjpeg({ quality: 75, progressive: true }),
+            imagemin.optipng({ optimizationLevel: 5 }),
+            imagemin.svgo({
+                plugins: [
+                    { removeViewBox: true },
+                    { cleanupIDs: false }
+                ]
+            })
+        ]))
+        .pipe(gulp.dest(`${dist}img`))
+    done();
+});
 
 
-gulp.task('watch', function () {
-    watch(['./dist/*.html', './dist/css/**/*.css'], gulp.parallel(browserSync.reload));
-    watch('./src/scss/**/*.scss', function () {
+gulp.task('watch', function() {
+    watch([`${dist}*.html`, `${dist}css/**/*.css`], gulp.parallel(browserSync.reload));
+    watch('./src/scss/**/*.scss', function() {
         setTimeout(gulp.parallel('sass'), 1000);
     });
     watch('./src/html/**/*.html', gulp.parallel('html'));
@@ -155,19 +155,19 @@ gulp.task('watch', function () {
     watch("./src/js/**/*.js", gulp.parallel("build-js"));
 });
 
-gulp.task('server', function () {
+gulp.task('server', function() {
     browserSync.init({
         server: {
-            baseDir: "./dist/"
+            baseDir: dist
         }
     });
 });
 
 gulp.task('default', gulp.series(
-    gulp.parallel('sass', 'html', "build-js", "compress", "webp"),
+    gulp.parallel('sass', 'html', "build-js", "compress"),
     gulp.parallel('server', 'watch')
 ));
 
 
 
-//, "copy-assets"
+//, "copy-assets", "webp"
